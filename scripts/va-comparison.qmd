@@ -1,0 +1,674 @@
+---
+title: "Analysis of Emotion Ratings"
+author: "Cameron J. Anderson"
+format:
+  html:
+    embed-resources: true
+---
+
+# Data Set-up
+
+```{r results='hide', message=FALSE, warning = FALSE}
+# load data
+source(paste0(here::here(), '/lib/functions.R'))
+source(paste0(here::here(), '/scripts/layout-mats.R'))
+source(paste0(here::here(), '/scripts/va-comparison-preprocessing.R'))
+```
+
+# Power Analysis
+
+We first performed a power analysis to identify how many participants to include in each experiment.
+
+```{r}
+pwrss::pwrss.f.reg(r2 = 0.4, k = 3, power = .9)
+```
+
+# Data Analyses
+
+This code prepares a data frame collapsing across participant ratings.
+
+```{r message=F, results='hide', warning=FALSE}
+# create summary data frame
+summaryDat <- fullDat |> 
+  dplyr::group_by(
+    composer, 
+    albumID, 
+    condition, 
+    key
+    ) |> 
+  dplyr::summarize(
+    arousal = mean(arousal),
+    valence = mean(valence)
+) 
+```
+
+## Circumplex plot (Fig 1)
+
+```{r message=FALSE, warning=FALSE}
+
+p1 <- pairedCircumplex(
+  subset(fullDat, composer == 'bach'), 
+  groupCol = 'expID', 
+  chosenLvls = c('141', '142')
+) + 
+  ggplot2::labs(subtitle='Bach', x = '', y = '') +
+  ggplot2::theme(legend.position = 'bottom')
+
+p2 <- pairedCircumplex(
+  chop, 
+  groupCol = 'expID', 
+  chosenLvls = c('155', '137')
+) + 
+  ggplot2::labs(subtitle='Chopin', x = '', y = '')
+
+circLeg <- cowplot::get_plot_component(
+  p1, 
+  'guide-box-bottom'
+) 
+
+gridExtra::grid.arrange(
+  circLeg, 
+  p1 + ggplot2::theme(legend.position = 'none'), 
+  p2 + ggplot2::theme(legend.position = 'none'),
+  layout_matrix = circLayout,
+  bottom = 'Valence',
+  left = 'Arousal'
+) |>
+ggplot2::ggsave(
+  filename = paste0(
+    here::here(), 
+    '/img/fig1.tiff'
+  ), 
+  width = 7.5, 
+  height = 4.5
+)
+
+
+```
+
+#### Do deadpan & expressive conditions significantly differ in terms of valence and arousal?
+
+```{r, echo = F, results = 'asis', warning=FALSE}
+# valence
+cat(paste("The mean valence rating of deadpan listeners is", round(mean(subset(fullDat, condition == 'deadpan')$valence), 2), "\n"))
+
+cat(paste("The SD valence rating of deadpan listeners is", round(sd(subset(fullDat, condition == 'deadpan')$valence), 2), "\n"))
+
+cat(paste("The mean valence rating of expressive listeners is", round(mean(subset(fullDat, condition == 'expressive')$valence), 2), "\n"))
+
+cat(paste("The SD valence rating of expressive listeners is", round(sd(subset(fullDat, condition == 'expressive')$valence), 2), "\n"))
+
+# arousal
+cat(paste("The mean arousal rating of deadpan listeners is", round(mean(subset(fullDat, condition == 'deadpan')$arousal), 2), "\n"))
+
+cat(paste("The SD arousal rating of deadpan listeners is", round(sd(subset(fullDat, condition == 'deadpan')$arousal), 2), "\n"))
+
+cat(paste("The mean arousal rating of expressive listeners is", round(mean(subset(fullDat, condition == 'expressive')$arousal), 2), '\n'))
+
+cat(paste("The SD arousal rating of expressive listeners is", round(sd(subset(fullDat, condition == 'expressive')$arousal), 2)))
+```
+
+### How similar are valence and arousal ratings?
+
+```{r}
+# overall correlations
+
+t1 <- cor.test(
+  subset(summaryDat, condition == 'expressive')$valence, 
+  subset(summaryDat, condition == 'deadpan')$valence
+)
+
+t2 <- cor.test(
+  subset(summaryDat, condition == 'expressive')$arousal, 
+  subset(summaryDat, condition == 'deadpan')$arousal
+) 
+
+print(t1)
+print(t2)
+print(
+  p.adjust(
+    c(
+      t1$p.value, 
+      t2$p.value)
+  )
+)
+remove(t1, t2)
+
+```
+
+
+
+```{r}
+# test differences (nonparametric)
+
+t1 <- wilcox.test(
+  x = subset(summaryDat, condition == "expressive")$valence,
+  y = subset(summaryDat, condition == "deadpan")$valence, 
+  paired = TRUE, 
+  exact = FALSE
+)
+t2 <- wilcox.test(
+  x = subset(summaryDat, condition == "expressive")$arousal,
+  y = subset(summaryDat, condition == "deadpan")$arousal, 
+  paired = TRUE, 
+  exact = FALSE
+)
+
+message('valence')
+print(t1)
+message('arousal')
+print(t2)
+
+
+print(
+  paste('Adjusted P valence, arousal: ', 
+  p.adjust(
+    c(
+      t1$p.value, 
+      t2$p.value)
+    )
+  )
+)
+message('effect size valence')
+as.numeric(
+  rcompanion::wilcoxonPairedR(
+    x = summaryDat$valence, 
+    g = summaryDat$condition, 
+    ci = TRUE
+  )
+)
+message('effect size arousal')
+as.numeric(
+  rcompanion::wilcoxonPairedR(
+    x = summaryDat$arousal, 
+    g = summaryDat$condition, 
+    ci = TRUE
+  )
+)
+```
+
+-   Arousal exhibits significant differences between conditions.
+
+### How do differences between conditions apply to individual composers?
+
+```{r}
+# comparisons
+
+t1 <- wilcox.test(
+  subset(
+    summaryDat, 
+    composer == 'bach' & condition == "expressive"
+  )$valence, 
+  subset(
+    summaryDat, 
+    composer == 'bach' & condition == "deadpan"
+  )$valence, 
+  paired = TRUE, 
+  exact = FALSE
+)
+
+t2 <- wilcox.test(
+  subset(
+    summaryDat, 
+    composer == 'chopin' & condition == "expressive"
+  )$valence,
+  subset(summaryDat, 
+  composer == 'chopin' & condition == "deadpan"
+  )$valence, 
+  paired = TRUE,
+  exact = FALSE
+)
+
+## bach -- arousal significantly differs
+
+t3 <- wilcox.test(
+  subset(
+    summaryDat, 
+    composer == 'bach' & condition == "expressive"
+  )$arousal, 
+  subset(
+    summaryDat, composer == 'bach' & condition == "deadpan"
+  )$arousal, 
+  paired = TRUE, 
+  exact = FALSE
+)
+
+t4 <- wilcox.test( 
+  subset(
+    summaryDat, 
+   composer == 'chopin' & condition == "expressive"
+  )$arousal,
+  subset(
+    summaryDat, 
+    composer == 'chopin' & condition == "deadpan"
+  )$arousal, 
+  paired = TRUE,
+  exact = FALSE
+)
+
+message('bach valence')
+print(t1)
+message('chopin valence')
+print(t2)
+message('bach arousal')
+print(t3)
+message('chopin arousal')
+print(t4)
+p.adjust(c(t1$p.value, t2$p.value, t3$p.value, t4$p.value))
+remove(t1, t2, t3, t4)
+
+# Effect sizes:
+
+rcompanion::wilcoxonPairedR(
+  x = subset(summaryDat, composer == 'bach')$valence, 
+  g = subset(summaryDat, composer == 'bach')$condition, 
+  ci = T
+) |> as.numeric()
+
+rcompanion::wilcoxonPairedR(
+  x = subset(summaryDat, composer == 'chopin')$valence, 
+  g = subset(summaryDat, composer == 'chopin')$condition, 
+  ci = T
+) |> as.numeric()
+
+rcompanion::wilcoxonPairedR(
+  x = subset(summaryDat, composer == 'bach')$arousal, 
+  g = subset(summaryDat, composer == 'bach')$condition, 
+  ci = T
+) |> as.numeric()
+
+rcompanion::wilcoxonPairedR(
+  x = subset(summaryDat, composer == 'chopin')$arousal, 
+  g = subset(summaryDat, composer == 'chopin')$condition, 
+  ci = T
+) |> 
+  as.numeric()
+
+
+```
+
+#### Which pieces significantly differ?
+
+Next we employ a bootstrap approach to assess how many pieces significantly differed in valence and arousal
+
+```{r, message = F, results='hide'}
+
+# fullDat$pieceID = paste0(fullDat$pieceID,
+#                          substr(fullDat$composer, 1, 1))
+# set.seed(1)
+# bootData <- bootstrapCircumplexDifference(
+#  subset(fullDat, condition == 'expressive'),
+#  subset(fullDat, condition == 'deadpan'),
+#  returnSummary = F,
+#  replications = 10,
+#  sampleSize = 30,
+#  scaleVars = F,
+#  seed = 1
+# )
+# save(
+#   bootData,
+#  file = paste0(here::here(),'/Data/BootstrapTest', Sys.Date(), '.RData')
+# )
+
+```
+
+# Coefficients of Variation
+
+```{r}
+expressCVSig <- data.frame(
+  group = c('Expressive', 'Deadpan'),
+  meanCVVal = c(mean(bootData$valenceA_cv), mean(bootData$valenceB_cv)),
+  lciCVVal = c(quantile(bootData$valenceA_cv, c(0.025)),
+               quantile(bootData$valenceB_cv, c(0.025))),
+  uciCVVal = c(quantile(bootData$valenceA_cv, c(0.975)),
+               quantile(bootData$valenceB_cv, c(0.975))),
+  meanCVAro = c(mean(bootData$arousalA_cv),mean(bootData$arousalB_cv)),
+  lciCVAro = c(quantile(bootData$arousalA_cv, c(0.025)),
+               quantile(bootData$arousalB_cv, c(0.025))),
+  uciCVAro = c(quantile(bootData$arousalA_cv, c(0.975)),
+               quantile(bootData$arousalB_cv, c(0.975)))
+) 
+```
+
+```{r, warning=FALSE, message=FALSE}
+expressCVSig[,2:ncol(expressCVSig)] <- apply(
+  expressCVSig[,2:ncol(expressCVSig)],2, 
+      function(x) round(as.numeric(x), 4)
+) 
+
+expressCVSig
+```
+
+# Plot differences
+
+```{r}
+bootPlotDF$key <- nameKeysSimple(
+  substr(bootPlotDF$pieceID, 1, nchar(bootPlotDF$pieceID)-1))
+
+bootPlotDF$composer <- as.factor(
+  substr(bootPlotDF$pieceID,
+       nchar(bootPlotDF$pieceID),
+             nchar(bootPlotDF$pieceID)
+       )
+  )
+
+levels(bootPlotDF$composer) = c('bach', 'chopin')
+
+# temporarily change key back to a character vector to replace c# value with db
+
+bootPlotDF$key = as.character(bootPlotDF$key)
+bootPlotDF$key[bootPlotDF$composer == 'chopin' & 
+             bootPlotDF$key == 'C#'] <- 'Db'
+# now convert back to factor
+bootPlotDF$key = as.factor(bootPlotDF$key)
+
+bootPlotDF$key = prettyKeyCol(bootPlotDF$key)
+
+
+```
+
+```{r}
+bootPlotDF$sigDifValence <- sign(bootPlotDF$valenceDiffLCI) == sign(bootPlotDF$valenceDiffUCI)
+bootPlotDF$sigDifArousal <- sign(bootPlotDF$arousalDiffLCI) == sign(bootPlotDF$arousalDiffUCI)
+summary(bootPlotDF$sigDifArousal)
+summary(bootPlotDF$sigDifValence)
+
+```
+
+-   21 pieces significantly differed in arousal, 13 of which were by Bach
+
+-   4 pieces differed significantly in valence
+
+Note: Bach and Chopin wrote G# as key sig in minor keys, but Ab in major keys; Chopin wrote in Db minor.
+
+```{r, warning=F, message=FALSE}
+
+# change dimensions for easy visualization
+wideDat <- summaryDat[,!colnames(summaryDat) == 'albumID'] |> 
+  tidyr::pivot_wider(names_from = 'condition', 
+              values_from = c('valence', 'arousal')) 
+
+wideDat$mode <- factor(wideDat$key == tolower(wideDat$key))
+levels(wideDat$mode) <- c('Major', 'minor')
+
+
+# show ids where difference is significant
+
+corrSigPlot <- data.frame()
+
+for(thisComposer in c('bach', 'chopin')) {
+  # subset by composer
+  wideDatSS = subset(wideDat, composer == thisComposer) 
+  # subset bootstrap simulations
+  bootPlotSS = subset(bootPlotDF, composer == thisComposer)
+  # check which keys yield sig difference in bootplot
+  wideDatSS$labelsValence = wideDatSS$key %in% bootPlotSS$key[bootPlotSS$sigDifValence == T]
+  wideDatSS$labelsArousal = wideDatSS$key %in% bootPlotSS$key[bootPlotSS$sigDifArousal == T]
+  # bind to data frame
+  corrSigPlot <- rbind(corrSigPlot, wideDatSS)
+}
+# hide non-significant key signatures for valence and change mode colour to grey
+corrSigPlot$key2 <- corrSigPlot$key
+corrSigPlot$key2[!corrSigPlot$labelsValence] <- ''
+corrSigPlot$mode2 <- corrSigPlot$mode
+levels(corrSigPlot$mode2[!corrSigPlot$labelsValence]) <- c('*', '*')
+corrSigPlot$key3 <- corrSigPlot$key
+corrSigPlot$key3[!corrSigPlot$labelsArousal] <- ''
+corrSigPlot$mode3 <- corrSigPlot$mode
+levels(corrSigPlot$mode3[!corrSigPlot$labelsArousal]) <- c('*', '*')
+
+```
+
+```{r warning=FALSE, message=FALSE}
+# now plot figures:
+cc1 <- corrSigPlot |> 
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = valence_deadpan, 
+      y = valence_expressive, 
+      label = key2, 
+      alpha = mode2
+    )
+ ) + 
+  ggplot2::geom_smooth(
+    method='lm',
+    linetype = 1,
+    color = 'grey50', 
+    se = F, 
+    alpha = 0.7
+  ) +
+  ggplot2::geom_abline(
+    color = 'grey', 
+    linetype = 2
+  ) +
+  ggplot2::geom_point(
+    color = 'grey',
+    ggplot2::aes(
+      shape = composer, 
+      color = mode2, 
+      alpha = mode2
+    )
+ ) +
+  ggplot2::geom_point(
+    data = subset(
+      corrSigPlot, 
+      !is.na(corrSigPlot$mode2)
+    ), 
+    ggplot2::aes(
+      shape = composer, 
+      color = mode2, 
+      alpha = mode2
+    )
+  ) +
+  ggrepel::geom_text_repel(
+    ggplot2::aes(
+      color = mode2, 
+      alpha = mode2
+    ), 
+  max.overlaps = 12
+) +
+  ggplot2::theme_classic() +
+  ggplot2::scale_colour_manual(
+    values = c(
+      'firebrick1', 
+      'dodgerblue2'
+      )
+  ) +
+  ggplot2::scale_alpha_manual(
+    values = c(
+      1,
+      1,
+      0.2
+    )
+  ) +
+  ggplot2::labs(
+    x='Deadpan Rating',
+    y='Expressive Rating'
+  ) +
+  ggplot2::ggtitle('Valence') +
+  ggplot2::theme(
+    legend.position = 'none'
+  )
+
+cc2 <- corrSigPlot |> 
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = arousal_deadpan, 
+      y = arousal_expressive,
+      label = key3, 
+      alpha = mode3
+    )
+  ) +  
+  ggplot2::geom_smooth(
+    method='lm',
+    linetype = 1,
+    color = 'grey50', 
+    se = F, 
+    alpha = 0.7
+  ) +
+  ggplot2::geom_abline(
+    color = 'grey', 
+    linetype = 2
+  ) +
+  ggplot2::geom_point(
+    color = 'grey', 
+    ggplot2::aes(
+      shape = composer, 
+      color = mode3, 
+      alpha = mode3
+    )
+  )+
+  ggplot2::geom_point(
+    data = subset(
+      corrSigPlot, 
+      !is.na(corrSigPlot$mode3)
+    ), 
+    ggplot2::aes(
+      shape = composer, 
+      color = mode3, 
+      alpha = mode3)
+   ) +
+  ggrepel::geom_text_repel(
+    ggplot2::aes(
+      color = mode3, 
+      alpha = mode3
+    ), 
+    max.overlaps = 15, 
+    nudge_y = 0.2
+  )+
+  ggplot2::theme_classic()+
+  ggplot2::scale_colour_manual(
+    values = c(
+      'firebrick1', 
+      'dodgerblue2'
+    )
+  ) +
+  ggplot2::scale_alpha_manual(
+    values = c(
+      1,
+      1,
+      0.2
+    )
+  ) +
+  ggplot2::scale_y_continuous(
+    position = 'right'
+  )+
+  ggplot2::labs(
+    x='Deadpan Rating',
+    y='Expressive Rating'
+  ) +
+  ggplot2::ggtitle('Arousal') +
+  ggplot2::theme(legend.position = 'none')
+
+
+```
+
+```{r warning=FALSE}
+# layout figures...
+cc1 <- cc1 + 
+  ggplot2::xlim(1,7) +
+  ggplot2::ylim(1,7) +
+  ggplot2::labs(
+  x = 'Deadpan Rating',
+  y = 'Expressive Rating'
+)
+
+cc2 <- cc2 + 
+  ggplot2::xlim(1,100) + 
+  ggplot2::ylim(1,100) + 
+  ggplot2::labs(
+    x = 'Deadpan Rating',
+    y = 'Expressive Rating'
+)
+```
+
+```{r warning=FALSE, message=FALSE}
+all_corr_plots <- gridExtra::grid.arrange(
+  correlationLegend,
+  cc1,
+  bs1+
+    ggplot2::theme(
+      axis.title.y = ggplot2::element_blank()
+    ),
+  cc2,
+  bs2+
+    ggplot2::theme(
+      axis.title.y = 
+        ggplot2::element_blank()
+    ),
+  layout_matrix = corrSigLayout
+)
+
+ggplot2::ggsave(
+  paste0(
+    here::here(), 
+    '/img/fig2.tiff'
+  ), 
+  plot = all_corr_plots,
+  height = 5, 
+  width = 12.5, 
+  units = 'in'
+)
+
+```
+
+## Supplementary Figure
+
+```{r}
+gridExtra::grid.arrange(
+  ncol = 2,
+  ggplot2::ggplot(
+    expressCVSig, 
+    ggplot2::aes(
+      x = group, 
+      y = meanCVVal,
+     ymin = lciCVVal, 
+     ymax = uciCVVal
+   )
+  ) +
+    ggplot2::geom_point() + 
+    ggplot2::geom_errorbar() + 
+    ggplot2::ylim(
+      .2, 
+      .5
+    ) + 
+    ggplot2::theme_classic()+
+    ggplot2::labs(
+      y = 'Coefficient of Variation (%)', 
+      x = 'Condition', 
+      subtitle='Valence'
+    ),
+  ggplot2::ggplot(
+    expressCVSig, 
+    ggplot2::aes(
+      x = group, 
+      y = meanCVAro,
+      ymin = lciCVAro, 
+      ymax = uciCVAro
+    )
+  )+
+    ggplot2::geom_point()+ 
+    ggplot2::geom_errorbar()+
+    ggplot2::ylim(
+      .2,
+      .5
+    ) +
+    ggplot2::theme_classic() +
+    ggplot2::labs(
+      y = '', 
+      x = 'Condition', 
+      subtitle = 'Arousal'
+    ) +
+    ggplot2::theme(
+      axis.ticks.y = ggplot2::element_blank(),
+      axis.text.y = ggplot2::element_blank(),
+      axis.line.y = ggplot2::element_blank()
+    )
+)
+ggplot2::ggsave(
+  filename = paste0(
+    here::here(), 
+    '/img/figs1.tiff'
+  )
+)
+```
