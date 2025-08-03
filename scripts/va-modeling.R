@@ -68,13 +68,15 @@ set.seed(123)
 en_valence_dp <- elastic_selection(
   valence ~ . - condition, 
   subset(df_valence, condition == "deadpan"), 
-  alpha = 0.5
+  alpha = 0.5,
+  seed = 123
 )
 
 en_valence_ex <- elastic_selection(
   valence ~ . - condition, 
   subset(df_valence, condition == "expressive"), 
-  alpha = 0.5
+  alpha = 0.5,
+  seed = 123
 )
 
 # fit arousal model (all ratings)
@@ -82,13 +84,15 @@ en_valence_ex <- elastic_selection(
 en_arousal_dp <- elastic_selection(
   arousal ~ . - condition, 
   subset(df_arousal, condition == "deadpan"), 
-  alpha = 0.5
+  alpha = 0.5,
+  seed = 123
 )
 
 en_arousal_ex <- elastic_selection(
   arousal ~ . - condition, 
   subset(df_arousal, condition == "expressive"), 
-  alpha = 0.5
+  alpha = 0.5,
+  seed = 123
 )
 var_imp_val_dp <- get_var_imp(en_valence_dp)
 var_imp_val_ex <- get_var_imp(en_valence_ex)

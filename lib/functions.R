@@ -366,8 +366,10 @@ elastic_selection <- function(
     data, # dataframe
     folds=10, # use 10-fold cross-validation
     alpha=0.5, # lasso regression
+    seed = 123,
     ...
 ){
+  set.seed(seed)
   cv_glm <- glmnetUtils::cv.glmnet(
     formula = formula,
     data = data,
