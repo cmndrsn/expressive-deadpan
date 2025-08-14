@@ -12,7 +12,7 @@ Analyses can be replicated using the `renv` package to restore dependencies and 
 Before this, you must have git installed and configured, as well as *R*. I also recommend installing *RStudio* as it will allow you to open .Rproj files.
 ## Cloning repository
 In a terminal, navigate to the location you would like to write the project files to. Then, clone the repository: 
-`git clone https://github.com/cmndrsn/expressive-deadpan` (run from a terminal)
+`git clone https://github.com/cmndrsn/expressive-deadpan` 
 ## Reproducing analyses with renv (recommended)
 - Ensure the package `renv` is installed for *R*.
   - Inside *R*, run the command `install.packages("renv")`.
@@ -22,5 +22,6 @@ In a terminal, navigate to the location you would like to write the project file
 - From the file navigator:
   - open `scripts/va-comparison.qmd` from within the project to reproduce analyses of emotion ratings
   - open `scripts/va-modeling.R` from within the project to reproduce regression analyses
+
 
 
