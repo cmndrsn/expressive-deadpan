@@ -28,16 +28,17 @@ legend_edp <- ggpubr::get_legend(
 
 # va-comparison.qmd ---------------------------------------------------------
 
-circLayout <- rbind(
-  rep(1, each = 8),
-  rep(c(2,3), each = 6),
-  rep(c(2,3), each = 6),
-  rep(c(2,3), each = 6),
-  rep(c(2,3), each = 6),
-  rep(c(2,3), each = 6),
-  rep(c(2,3), each = 6)
+suppressWarnings(
+  circLayout <- rbind(
+    rep(1, each = 8),
+    rep(c(2,3), each = 6),
+    rep(c(2,3), each = 6),
+    rep(c(2,3), each = 6),
+    rep(c(2,3), each = 6),
+    rep(c(2,3), each = 6),
+    rep(c(2,3), each = 6)
+  )
 )
-
 corrSigLayout <-  rbind(
   rep(c(2,3,5,4), times = c(6,4,4,6)),
   rep(c(2,3,5,4), times = c(6,4,4,6)),              

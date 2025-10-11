@@ -7,6 +7,11 @@ df_extracted_features <- read.csv(
   "data/extracted-features.csv"
 )
 
+df_extracted_features  <- df_extracted_features |> 
+  dplyr::mutate(cue_id = paste0(stat_name, variable)) |> 
+  dplyr::filter(cue_id %in% c('meanbrightness', 'stdrms', 'rangeambitus')) |>
+  dplyr::select(-cue_id)
+
 # read in annotations
 
 df_annotations <- read.csv(
@@ -18,8 +23,6 @@ df_annotations <- read.csv(
 df_equated_features <- read.csv(
   'data/equated-features.csv'
 )
-
-
 
 # add identify pieces based on file names
 
@@ -86,37 +89,7 @@ all(
   paste0(cues_dp$composer, cues_dp$pieceID) == 
     paste0(cues_ep$composer, cues_ep$pieceID)
 )
-# calculate absolute difference in brightness
-cues_dp$brightness_diff <- abs(cues_dp$brightness_mean - cues_ep$brightness_mean)
-# calculate absolute difference in rms sd
-cues_dp$rms_std_diff <- abs(cues_dp$rms_std - cues_ep$rms_std)
 
-## select information needed for merge
-
-df_cue_diffs <- cues_dp |> 
-  dplyr::select(
-    composer,
-    pieceID,
-    brightness_diff,
-    rms_std_diff
-)
-
-# join brightness and rms differences with other features
-
-df_features <- dplyr::left_join(
-  df_features,
-  df_cue_diffs,
-  by = dplyr::join_by(
-    composer,
-    pieceID
-  )
-)
-
-remove(
-  df_cue_diffs,
-  cues_dp,
-  cues_ep
-)
 
 df_features <- dplyr::left_join(
   df_features,
@@ -152,7 +125,9 @@ df_full <- dplyr::left_join(
 
 remove(
   df_annotations,
-  df_features
+  df_features,
+  cues_dp,
+  cues_ep
 )
 
 

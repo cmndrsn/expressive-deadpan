@@ -1,7 +1,7 @@
 
 # Functions ---------------------------------------------------------------
 
-# for calculating percent differences and changes....
+# coefficient of variation
 .getCoefficientofVariation <- function(X) sd(X)/mean(X)
 
 prettyKeyCol <- function(dat)
@@ -85,8 +85,7 @@ pairedCircumplex <- function(
     chosenLvls, 
     style = 'mp' 
 ){
-  # I am making a copy of the groupCol argument because subsetting is difficult
-  # with bracket notation
+
   dat$temp <- dat[,groupCol]
   names(dat)[ncol(dat)] = "groupCol"
   
@@ -142,7 +141,7 @@ pairedCircumplex <- function(
     DF2, 
     sampleSize = 30
 ){
-  # we need fixed index numbers to sample the rows corresponding to pieceID of interest
+  # sample the rows corresponding to pieceID of interest
   DF1$index = 1:nrow(DF1)
   DF2$index = 1:nrow(DF2)
   
@@ -155,7 +154,7 @@ pairedCircumplex <- function(
   #print(rowDF1)
   rowDF2 = DF2[thisRowDF2,]
   #print(rowDF2)
-  # now take squared difference of valence and arousal between df1 and df2
+  # now take difference of valence and arousal between df1 and df2
   
   valenceA <- mean(as.numeric(rowDF1$valence))
   valenceB <- mean(as.numeric(rowDF2$valence))
@@ -217,7 +216,7 @@ pairedCircumplex <- function(
   
   differenceSample <- sapply(
     pieceSample, 
-    function(x){#message("sampling ",x); 
+    function(x){ 
       .randomDifferenceRating(
         pieceToSample = as.character(x), 
         DF1 = DF1, 
@@ -286,7 +285,7 @@ bootstrapCircumplexDifference <- function(
     replications, 
     " replications"
   )
-  # apply .sampleDifferenceArray function to pieceSample and repeat this process 1000 times
+  # run simulations
   bootFrame <- pbapply::pbreplicate(
     n = replications, 
     expr = .sampleDifferenceArray(
