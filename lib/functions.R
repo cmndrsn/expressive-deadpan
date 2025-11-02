@@ -127,8 +127,7 @@ pairedCircumplex <- function(
 # Bootstrap Differences ---------------------------------------------------
 
 # Step 1: For each condition, randomly sample 30 ratings (with replacement) for 
-## a given piece. Calculate mean absolute difference for valence and arousal, 
-## along with Euclidean distance 
+## a given piece. Calculate mean difference for valence and arousal
 # Step 2: After calculating summary statistics on individual pieces, ungroup
 ## data and calculate coefficient of variation across all sampled pieces.
 ## Steps 1 and 2 give us the results of 1 virtual experiment.
@@ -145,7 +144,7 @@ pairedCircumplex <- function(
   DF1$index = 1:nrow(DF1)
   DF2$index = 1:nrow(DF2)
   
-  # first, randomly sample one row number in first dataframe where pieceID is pieceID of interest
+  # first, randomly sample row numbers in first dataframe where pieceID is pieceID of interest
   thisRowDF1 = sample(as.numeric(DF1$index[DF1$pieceID == pieceToSample]), size = sampleSize, replace = T)
   # now do same for second dataframe
   thisRowDF2 = sample(as.numeric(DF2$index[DF2$pieceID == pieceToSample]), size = sampleSize, replace = T)
@@ -250,7 +249,7 @@ bootstrapCircumplexDifference <- function(
 ) {
   # for reproducibility:
   set.seed(seed)
-  # first scale and center data
+  # argument to scale and center data
   if(scaleVars)
   {
     # this is to scale data across groups: add column so we can subset them later
