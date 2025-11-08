@@ -300,7 +300,7 @@ Next we employ a bootstrap approach to assess how many pieces significantly diff
 #  subset(fullDat, condition == 'expressive'),
 #  subset(fullDat, condition == 'deadpan'),
 #  returnSummary = F,
-#  replications = 10,
+#  replications = 10000,
 #  sampleSize = 30,
 #  scaleVars = F,
 #  seed = 1
