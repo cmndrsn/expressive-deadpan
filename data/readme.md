@@ -1,23 +1,23 @@
 ## Annotations
 
 `annotations.csv` contains the valence and arousal annotations of participants from each of the four experiments (two expressive, two deadpan).
-`set`: A number identifying the set relative to the composer's 24-piece sets. For both Bach and Chopin this is "1".
+`set`: ID representing set relative to the composer's 24-piece sets. For both Bach and Chopin this is "1".
 `composer`: Name of composer.
-`albumID`: Character string identifying the composer, performer and year. For deadpan recordings "deadpan" is appended at the end of the string.
-`pieceID`: ID uniquely identifying piece: Upper and lower-case "m" differentiates major and minor pieces respectively. The rest of the ID is the chroma of the piece.
+`albumID`: ID representing album (composer, performer and year). For deadpan recordings "deadpan" is appended at the end of the string.
+`pieceID`: ID representing piece: Upper and lower-case "m" differentiates major and minor pieces respectively. The rest of the ID is the chroma of the piece.
 `key` The key of the piece, with upper-case letters representing major and lower-case letters representing minor.
 `chroma`: Chroma numbered from 0 (C) to 11 (B). Chroma number representation of key.
-`Participant`: A number representing the participant in experiment.
+`participant`: ID representing participant (numbers used for lab's internal tracking).
 `valence`: Valence rating of excerpt.
 `arousal`: Arousal rating of excerpt.
 `condition`: Denotes whether experiment is expressive or deadpan condition.
-`expID`: A number uniquely identifying the experiment.
+`expID`: ID representing the experiment.
 
 `bootstrap...RData`: RData file containing results from bootstrap simulation conducted for examining significant differences in valence and arousal across analyzed excerpts.
 `pieceID`: Same as above, but first letter of composer name is appended.
 `valenceDiff`, `arousalDiff`: Difference in sampled valence and arousal ratings between conditions.
 `valenceA`, `valenceB`, `arousalA`, `arousalB`: Mean of resampled pieceID ratings in simulated run.
-`valenceA_cv`, `valenceB_cv`, `arousalA_cv`, `arousalB_cv`: Coefficient of variation across simulated experiment.
+`valenceA_cv`, `valenceB_cv`, `arousalA_cv`, `arousalB_cv`: Coefficient of variation of bootstrap replication.
 
 ## Features
 `equated-features.csv` is a dataset of features calculated manually from encodings of musical scores or audio files. 
